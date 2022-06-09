@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=128)),
                 ('description', models.TextField()),
                 ('img', models.ImageField(upload_to='image/%Y/%m/%d/')),
-                ('book', models.ForeignKey(to='management.Club')),
+                ('book', models.ForeignKey(to='management.Club', on_delete=models.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -73,7 +73,7 @@ class Migration(migrations.Migration):
                 ('nickname', models.CharField(max_length=16)),
                 ('permission', models.IntegerField(default=1)),
                 ('user_state', models.IntegerField(default=1)),
-                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
         ),
     ]

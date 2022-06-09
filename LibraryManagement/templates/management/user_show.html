@@ -1,15 +1,10 @@
-{% extends "management/base.html" %}
-{% load staticfiles %}
-
-{% block content %}
-
-    {% for user in users %}
-        {% if user.permission > 1 %}
-            社长:{{ user.nickname }}
-            {% else %}
-            社员:{{ user.nickname }}
-        {% endif %}
-        <br>
-    {% endfor %}
+{% extends "management/base.html" %} {% load static %} {% block content %}
+<div style="text-align: center; margin: 0 auto; width: 50%">
+  {% for user in users %} {% if user.permission > 1 %} 社长:{{ user.nickname }}
+  {% else %}
+  <a>社员:{{ user.nickname }}</a>
+  {% endif %}
+  <br />
+  {% endfor %}
+</div>
 {% endblock%}
-

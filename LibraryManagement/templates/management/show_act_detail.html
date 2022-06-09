@@ -1,13 +1,15 @@
-{% extends "management/base.html" %}
-{% load staticfiles %}
+{% extends "management/base.html" %} {% load static %} {% block content %}
 
-{% block content %}
+<div style="text-align: center;">
+  <img
+    src="/static/zixun/_s{{ club.activity_img }}"
+    alt=""
+  />
+  <br /><br />
+  <div>活动名称:{{ club.activity_name }}</div>
+  <div>活动描述:{{ club.activity_describe }}</div>
+  <div>活动人数:{{ club.activity_person }}</div>
+</div>
 
-        <img src="/static/zixun/_s{{ club.activity_img }}" alt="" style="margin-left: 40%">
-    <br><br>
-        <div  style="margin-left: 50%">活动名称:{{ club.activity_name }}</div>
-        <div  style="margin-left: 50%">活动描述:{{ club.activity_name }}</div>
-        <div  style="margin-left: 50%">活动人数:{{ club.activity_name }}</div>
-
-    <br><br><br><br>
+<br /><br /><br /><br />
 {% endblock%}

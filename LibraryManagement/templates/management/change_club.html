@@ -1,13 +1,11 @@
-{% extends "management/base.html" %}
-{% load staticfiles %}
-
-{% block content %}
-
-    {% for user in users %}
-        {% if user.permission == 1 %}
-            社员:{{ user.nickname }} <a href="{% url 'delete_user' user.uid %}">移除社团</a>
-        {% endif %}
-        <br>
-    {% endfor %}
-{% endblock%}
-
+{% extends "management/base.html" %} {% load static %} {% block content %}
+{% if users %} {% for user in users %} {% if user.permission == 1 %}
+<div style="width: 50%; margin: 0 auto">
+  社员:{{ user.nickname }}
+  <a href="{% url 'delete_user' user.uid %}">移除社团</a>
+</div>
+{% endif %}
+<br />
+{% endfor %} {% else %}
+<div>暂无其余成员</div>
+{% endif %} {% endblock%}

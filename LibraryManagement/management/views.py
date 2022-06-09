@@ -5,13 +5,16 @@ from django.contrib.auth.models import User
 from django.contrib import auth
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from management.models import MyUser, Club, Img, club_zixun, Myadmin
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from management.utils import permission_check
-import time,PIL,os
+import time
+import PIL
+import os
 from PIL import Image
 
+
 def index(request):
-    user = request.user if request.user.is_authenticated() else None
+    user = request.user if request.user.is_authenticated else None
     content = {
         'active_menu': 'homepage',
         'user': user,
@@ -20,7 +23,7 @@ def index(request):
 
 
 def signup(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return HttpResponseRedirect(reverse('homepage'))
     state = None
     if request.method == 'POST':
@@ -38,7 +41,8 @@ def signup(request):
                 new_user = User.objects.create_user(username=username, password=password,
                                                     email=request.POST.get('email', ''))
                 new_user.save()
-                new_my_user = MyUser(user=new_user, nickname=request.POST.get('nickname', ''))
+                new_my_user = MyUser(
+                    user=new_user, nickname=request.POST.get('nickname', ''))
                 new_my_user.save()
                 state = 'success'
     content = {
@@ -50,7 +54,7 @@ def signup(request):
 
 
 def login(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return HttpResponseRedirect(reverse('homepage'))
     state = None
     if request.method == 'POST':
@@ -108,12 +112,12 @@ def add_book(request):
     state = None
     if request.method == 'POST':
         new_book = Club(
-                name=request.POST.get('name', ''),
-                detail=request.POST.get('detail', ''),
-                author=request.POST.get('author', ''),
-                category=request.POST.get('category', ''),
-                price=request.POST.get('price', 0),
-                publish_date=request.POST.get('publish_date', '')
+            name=request.POST.get('name', ''),
+            detail=request.POST.get('detail', ''),
+            author=request.POST.get('author', ''),
+            category=request.POST.get('category', ''),
+            price=request.POST.get('price', 0),
+            publish_date=request.POST.get('publish_date', '')
         )
         new_book.save()
         state = 'success'
@@ -126,11 +130,11 @@ def add_book(request):
 
 
 def view_book_list(request):
-    user = request.user if request.user.is_authenticated() else None
+    user = request.user if request.user.is_authenticated else None
     # category_list = Club.objects.values_list('category', flat=True).distinct()
     # print(category_list)
     query_category = request.GET.get('category', 'all')
-    if (not query_category) or Club.objects.filter(category=query_category).count() is 0:
+    if (not query_category) or Club.objects.filter(category=query_category).count() == 0:
         query_category = 'all'
         book_list = Club.objects.all()
         i = []
@@ -177,7 +181,7 @@ def view_book_list(request):
 
 
 def detail(request):
-    user = request.user if request.user.is_authenticated() else None
+    user = request.user if request.user.is_authenticated else None
     book_id = request.GET.get('id', '')
     if book_id == '':
         return HttpResponseRedirect(reverse('view_book_list'))
@@ -189,7 +193,7 @@ def detail(request):
             'active_menu': 'view_book',
             'book': book,
         }
-    except :
+    except:
         return redirect(reverse('login'))
     return render(request, 'management/detail.html', content)
 
@@ -201,10 +205,10 @@ def add_img(request):
     if request.method == 'POST':
         try:
             new_img = Img(
-                    name=request.POST.get('name', ''),
-                    description=request.POST.get('description', ''),
-                    img=request.FILES.get('img', ''),
-                    book=Club.objects.get(pk=request.POST.get('book', ''))
+                name=request.POST.get('name', ''),
+                description=request.POST.get('description', ''),
+                img=request.FILES.get('img', ''),
+                book=Club.objects.get(pk=request.POST.get('book', ''))
             )
             new_img.save()
         except Club.DoesNotExist as e:
@@ -226,6 +230,7 @@ def user_show(request, id):
     context = {'users': users}
     return render(request, 'management/user_show.html', context)
 
+
 def join_club(request, uid):
     id = request.user.id
     # print(id)
@@ -234,65 +239,73 @@ def join_club(request, uid):
     user.save()
     return render(request, 'management/return.html')
 
+
 def delete_user(request, userid):
     user = MyUser.objects.get(id=userid)
     user.uid = 0
     user.save()
     return render(request, 'management/delete_user.html')
 
+
 def change_club(request, id):
     users = MyUser.objects.filter(uid=id)
     context = {'users': users}
     return render(request, 'management/change_club.html', context)
 
+
 def club_zixun_add(request):
-    return render(request, 'management/club_zixun_add.html')
+    context = {'active_menu': 'club_zixun'}
+    return render(request, 'management/club_zixun_add.html', context)
+
 
 def club_zixun_insert(request):
-    try:
-        # 判断并执行图片上传，缩放等处理
-        myfile = request.FILES.get("pic", None)
-        if not myfile:
-            return HttpResponse("没有上传文件信息！")
-        # 以时间戳命名一个新图片名称
-        filename = str(time.time()) + "." + myfile.name.split('.').pop()
-        path = os.path.join('./management/static/zixun/', filename)
-        print(os.path.abspath(path))
-        destination = open(path, 'wb+')
-        for chunk in myfile.chunks():  # 分块写入文件
-            destination.write(chunk)
-        destination.close()
-        # 执行图片缩放
-        im = Image.open("./management/static/zixun/" + filename)
-        im.thumbnail((400, 400))
-        # 把缩放后的图像用jpeg格式保存:
-        im.save("./management/static/zixun/_s" + filename, 'jpeg')
-        # 缩放到220*220:
-        im.thumbnail((220, 220))
-        # 把缩放后的图像用jpeg格式保存:
-        im.save("./management/static/zixun/_m" + filename, 'jpeg')
+    print(request.method, "123321")
+    # return HttpResponse("ok")
+    # try:
+    #     # 判断并执行图片上传，缩放等处理
+    #     myfile = request.FILES.get("pic", None)
+    #     if not myfile:
+    #         return HttpResponse("没有上传文件信息！")
+    #     # 以时间戳命名一个新图片名称
+    #     filename = str(time.time()) + "." + myfile.name.split('.').pop()
+    #     path = os.path.join('./management/static/zixun/', filename)
+    #     print(os.path.abspath(path))
+    #     destination = open(path, 'wb+')
+    #     for chunk in myfile.chunks():  # 分块写入文件
+    #         destination.write(chunk)
+    #     destination.close()
+    #     # 执行图片缩放
+    #     im = Image.open("./management/static/zixun/" + filename)
+    #     im.thumbnail((400, 400))
+    #     # 把缩放后的图像用jpeg格式保存:
+    #     im.save("./management/static/zixun/_s" + filename, 'jpeg')
+    #     # 缩放到220*220:
+    #     im.thumbnail((220, 220))
+    #     # 把缩放后的图像用jpeg格式保存:
+    #     im.save("./management/static/zixun/_m" + filename, 'jpeg')
 
+    #     ob = club_zixun()
+    #     ob.activity_name = request.POST['activity_name']
+    #     ob.activity_describe = request.POST['activity_describe']
+    #     ob.activity_img = filename
+    #     ob.activity_person = request.POST['activity_person']
+    #     ob.save()
+    #     context = {'info': '添加成功'}
+    #     return render(request, 'management/myadmin/info.html', context)
+    # except Exception as e:
+    #     print(e)
+    #     context = {'info': '添加失败'}
+    # return render(request, 'management/myadmin/info.html', context)
 
-        ob = club_zixun()
-        ob.activity_name = request.POST['activity_name']
-        ob.activity_describe = request.POST['activity_describe']
-        ob.activity_img = filename
-        ob.activity_person = request.POST['activity_person']
-        ob.save()
-        context = {'info': '添加成功'}
-        return render(request, 'management/myadmin/info.html', context)
-    except Exception as e:
-        print(e)
-        context = {'info': '添加失败'}
-        return render(request, 'management/myadmin/info.html', context)
 
 def show_act(request):
     clubs = club_zixun.objects.all()
     context = {'clubs': clubs}
     return render(request, 'management/show_act.html', context)
 
+
 def show_act_detail(request, id):
-    club = club_zixun.objects.get(id= id)
+    club = club_zixun.objects.get(id=id)
     context = {'club': club}
     return render(request, 'management/show_act_detail.html', context)
 
@@ -301,8 +314,10 @@ def show_act_detail(request, id):
 def myadmin_index(request):
     return render(request, 'management/myadmin/myadmin_show.html')
 
+
 def myadmin_reg(request):
     return render(request, 'management/myadmin/useradd_2.html')
+
 
 def myadmin_usersinsert(request):
     try:
@@ -322,10 +337,14 @@ def myadmin_usersinsert(request):
     return render(request, 'management/myadmin/info.html', context)
 
 # 登录
+
+
 def myadmin_login(request):
     return render(request, 'management/myadmin/myadmin_login.html')
 
 # 执行登录
+
+
 def myadmin_dologin(request):
     try:
         # 获取数据库中对应的用户
@@ -347,20 +366,24 @@ def myadmin_logout(request):
     del request.session['adminuser']
     return redirect(reverse('homepage'))
 
+
 def myadmin_show_clubs(request):
     clubs = Club.objects.all()
     context = {'clubs': clubs}
     return render(request, 'management/myadmin/show_clubs.html', context)
+
 
 def myadmin_club_info(request, id):
     club = Club.objects.get(id=id)
     context = {'club': club}
     return render(request, 'management/myadmin/show_club_info.html', context)
 
+
 def show_members(request, id):
     users = MyUser.objects.filter(uid=id)
     context = {'users': users}
     return render(request, 'management/myadmin/show_members.html', context)
+
 
 def del_member(request, id):
     user = MyUser.objects.get(id=id)
@@ -369,12 +392,15 @@ def del_member(request, id):
     context = {'info': '移除本社成功'}
     return render(request, 'management/myadmin/myadmin_info.html', context)
 
+
 def myadmin_change_member(request, id):
     users = MyUser.objects.filter(uid=id)
     context = {'users': users}
     return render(request, 'management/myadmin/myadmin_change_member.html', context)
 
+
 def myadmin_weiren(request, id):
+    print(id, 123321)
     old_shezhang = MyUser.objects.get(permission=2)
     old_shezhang.permission = 1
     new_shezhang = MyUser.objects.get(id=id)
@@ -389,6 +415,7 @@ def myadmin_weiren(request, id):
     context = {'info': '委任成功'}
     return render(request, 'management/myadmin/myadmin_info.html', context)
 
+
 def myadmin_show_all_members(request):
     users = MyUser.objects.all()
     context = {'users': users}
@@ -397,6 +424,7 @@ def myadmin_show_all_members(request):
 
 def myadmin_add_club(request):
     return render(request, 'management/myadmin/myadmin_add_club.html')
+
 
 def myadmin_insert_club(request):
     try:
