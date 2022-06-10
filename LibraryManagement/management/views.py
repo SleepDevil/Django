@@ -259,43 +259,35 @@ def club_zixun_add(request):
 
 
 def club_zixun_insert(request):
-    print(request.method, "123321")
-    # return HttpResponse("ok")
-    # try:
-    #     # 判断并执行图片上传，缩放等处理
-    #     myfile = request.FILES.get("pic", None)
-    #     if not myfile:
-    #         return HttpResponse("没有上传文件信息！")
-    #     # 以时间戳命名一个新图片名称
-    #     filename = str(time.time()) + "." + myfile.name.split('.').pop()
-    #     path = os.path.join('./management/static/zixun/', filename)
-    #     print(os.path.abspath(path))
-    #     destination = open(path, 'wb+')
-    #     for chunk in myfile.chunks():  # 分块写入文件
-    #         destination.write(chunk)
-    #     destination.close()
-    #     # 执行图片缩放
-    #     im = Image.open("./management/static/zixun/" + filename)
-    #     im.thumbnail((400, 400))
-    #     # 把缩放后的图像用jpeg格式保存:
-    #     im.save("./management/static/zixun/_s" + filename, 'jpeg')
-    #     # 缩放到220*220:
-    #     im.thumbnail((220, 220))
-    #     # 把缩放后的图像用jpeg格式保存:
-    #     im.save("./management/static/zixun/_m" + filename, 'jpeg')
+    try:
+        # 判断并执行图片上传，缩放等处理
+        myfile = request.FILES.get("pic", None)
+        if not myfile:
+            return HttpResponse("没有上传文件信息！")
+        # 以时间戳命名一个新图片名称
+        filename = myfile.name
+        path = os.path.join('./management/static/zixun/', filename)
+        print(os.path.abspath(path))
+        destination = open(path, 'wb+')
+        for chunk in myfile.chunks():  # 分块写入文件
+            destination.write(chunk)
+        destination.close()
+        # 执行图片缩放
+        im = Image.open("./management/static/zixun/" + filename)
+        im.thumbnail((400, 400))
+        # 把缩放后的图像用jpeg格式保存:
 
-    #     ob = club_zixun()
-    #     ob.activity_name = request.POST['activity_name']
-    #     ob.activity_describe = request.POST['activity_describe']
-    #     ob.activity_img = filename
-    #     ob.activity_person = request.POST['activity_person']
-    #     ob.save()
-    #     context = {'info': '添加成功'}
-    #     return render(request, 'management/myadmin/info.html', context)
-    # except Exception as e:
-    #     print(e)
-    #     context = {'info': '添加失败'}
-    # return render(request, 'management/myadmin/info.html', context)
+        ob = club_zixun()
+        ob.activity_name = request.POST['activity_name']
+        ob.activity_describe = request.POST['activity_describe']
+        ob.activity_img = filename
+        ob.activity_person = request.POST['activity_person']
+        ob.save()
+        context = {'info': '添加成功'}
+    except Exception as e:
+        print(e)
+        context = {'info': '添加失败'}
+    return render(request, 'management/myadmin/info.html', context)
 
 
 def show_act(request):

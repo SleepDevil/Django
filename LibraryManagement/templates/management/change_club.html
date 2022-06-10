@@ -4,6 +4,8 @@
   社员:{{ user.nickname }}
   <a href="{% url 'delete_user' user.uid %}">移除社团</a>
 </div>
+{% else %}
+<div style="width: 50%; margin: 0 auto">暂无成员</div>
 {% endif %}
 <br />
 {% endfor %} {% else %}
