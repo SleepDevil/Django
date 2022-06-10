@@ -8,4 +8,5 @@
     社团成立日期:     {{ club.publish_date  }} <br><br>
     社团类别:   {{ club.category }} <br><br>
     社团描述:   {{ club.detail }} <br> <br>
+    <a href="{% url 'del_club' club.id %}">删除该社团</a> <br>
 {% endblock %}

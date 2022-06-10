@@ -1,3 +1,5 @@
+from multiprocessing import context
+from unicodedata import name
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import user_passes_test, login_required
@@ -131,8 +133,6 @@ def add_book(request):
 
 def view_book_list(request):
     user = request.user if request.user.is_authenticated else None
-    # category_list = Club.objects.values_list('category', flat=True).distinct()
-    # print(category_list)
     query_category = request.GET.get('category', 'all')
     if (not query_category) or Club.objects.filter(category=query_category).count() == 0:
         query_category = 'all'
@@ -152,13 +152,9 @@ def view_book_list(request):
                 i.append(club.category)
         category_list = i
 
-        # print(club.category)
-        # book_list = Club.objects.filter(category=query_category)
-
     if request.method == 'POST':
         keyword = request.POST.get('keyword', '')
         book_list = Club.objects.filter(name__contains=keyword)
-        print(book_list)
         query_category = 'all'
 
     paginator = Paginator(book_list, 5)
@@ -169,7 +165,6 @@ def view_book_list(request):
         book_list = paginator.page(1)
     except EmptyPage:
         book_list = paginator.page(paginator.num_pages)
-    # print(category_list)
     content = {
         'user': user,
         'active_menu': 'view_book',
@@ -188,8 +183,9 @@ def detail(request):
     try:
         book = Club.objects.get(pk=book_id)
         need_user = MyUser.objects.get(user_id=user.id)
+        user.permission = need_user.permission
         content = {
-            'user': need_user,
+            'user': user,
             'active_menu': 'view_book',
             'book': book,
         }
@@ -233,7 +229,6 @@ def user_show(request, id):
 
 def join_club(request, uid):
     id = request.user.id
-    # print(id)
     user = MyUser.objects.get(user_id=id)
     user.uid = uid
     user.save()
@@ -249,7 +244,7 @@ def delete_user(request, userid):
 
 def change_club(request, id):
     users = MyUser.objects.filter(uid=id)
-    context = {'users': users}
+    context = {'users': users, 'active_menu': 'change_club'}
     return render(request, 'management/change_club.html', context)
 
 
@@ -260,11 +255,9 @@ def club_zixun_add(request):
 
 def club_zixun_insert(request):
     try:
-        # 判断并执行图片上传，缩放等处理
         myfile = request.FILES.get("pic", None)
         if not myfile:
             return HttpResponse("没有上传文件信息！")
-        # 以时间戳命名一个新图片名称
         filename = myfile.name
         path = os.path.join('./management/static/zixun/', filename)
         print(os.path.abspath(path))
@@ -272,10 +265,8 @@ def club_zixun_insert(request):
         for chunk in myfile.chunks():  # 分块写入文件
             destination.write(chunk)
         destination.close()
-        # 执行图片缩放
         im = Image.open("./management/static/zixun/" + filename)
         im.thumbnail((400, 400))
-        # 把缩放后的图像用jpeg格式保存:
 
         ob = club_zixun()
         ob.activity_name = request.POST['activity_name']
@@ -292,7 +283,8 @@ def club_zixun_insert(request):
 
 def show_act(request):
     clubs = club_zixun.objects.all()
-    context = {'clubs': clubs}
+    user = request.user if request.user.is_authenticated else None
+    context = {'clubs': clubs, 'user': user, 'active_menu': 'club_zixun_2'}
     return render(request, 'management/show_act.html', context)
 
 
@@ -384,6 +376,10 @@ def del_member(request, id):
     context = {'info': '移除本社成功'}
     return render(request, 'management/myadmin/myadmin_info.html', context)
 
+def del_club(request, id):
+    Club.objects.get(id=id).delete()
+    context = {'info': '删除成功'}
+    return render(request, 'management/myadmin/info.html', context)
 
 def myadmin_change_member(request, id):
     users = MyUser.objects.filter(uid=id)
@@ -392,12 +388,10 @@ def myadmin_change_member(request, id):
 
 
 def myadmin_weiren(request, id):
-    print(id, 123321)
     old_shezhang = MyUser.objects.get(permission=2)
     old_shezhang.permission = 1
     new_shezhang = MyUser.objects.get(id=id)
     new_shezhang.permission = 2
-    # print(new_shezhang, new_shezhang.permission)
     uid = new_shezhang.uid
     club = Club.objects.get(id=uid)
     club.author = new_shezhang.nickname
@@ -422,6 +416,12 @@ def myadmin_insert_club(request):
     try:
         ob = Club()
         ob.name = request.POST['name']
+        print(request.POST['name'], 'sadasdasd')
+        # print(Club.objects.get(name=request.POST['name']), 'sadasdasd')
+        if (Club.objects.get(name=ob.name)):
+            context = {'info': '添加社团失败，已存在该社团'}
+            return render(request, 'management/myadmin/myadmin_info.html', context)
+
         ob.price = request.POST['price']
         ob.author = request.POST['author']
         ob.publish_date = request.POST['publish_date']

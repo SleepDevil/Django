@@ -35,6 +35,7 @@ urlpatterns = [
     re_path(r'^myadmin_club_info/(?P<id>[0-9]+)$', views.myadmin_club_info, name='myadmin_club_info'),
     re_path(r'show_members/(?P<id>[0-9]+)$', views.show_members, name='show_members'),
     re_path(r'del_member/(?P<id>[0-9]+)$', views.del_member, name='del_member'),
+    re_path(r'del_club/(?P<id>[0-9]+)$', views.del_club, name='del_club'),
 
     # 更换社长
     re_path(r'^myadmin_change_member/(?P<id>[0-9]+)$', views.myadmin_change_member, name='myadmin_change_member'),
